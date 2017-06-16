@@ -1,6 +1,3 @@
-# import pbr.PicoBorgRev.PicoBorgRev3 as pibr
+import pbr.movement.movement as pbr_mv
 
-def func(i):
-    print i
-
-func(5)
+print("test")

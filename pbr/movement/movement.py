@@ -7,6 +7,7 @@
 # Import library functions we need
 import time
 import sys
+import math
 import pbr.PicoBorgRev.PicoBorgRev3 as PicoBorgRev
 
 #############
@@ -37,7 +38,7 @@ else:
 ######################
 # Check chip present #
 ######################
-def chip_present():
+def _chip_present():
     if not PBR.foundChip:
         boards = PicoBorgRev.ScanForPicoBorgReverse()
         if len(boards) == 0:
@@ -50,7 +51,7 @@ def chip_present():
             print 'PBR.i2cAddress = 0x%02X' % (boards[0])
         sys.exit()
 
-chip_present()
+_chip_present()
 # Uncomment to disable EPO latch, needed if you do not have a switch / jumper
 # PBR.SetEpoIgnore(True)
 PBR.SetCommsFailsafe(False)  # Disable the communications failsafe
@@ -74,41 +75,79 @@ def move(drive_left, drive_right, num_seconds):
     PBR.MotorsOff()
 
 
-# def corner(meters_hor, meters_ver, num_seconds):
+def corner_forward(angle, radius, rel_speed=1.0):
+    """
+    EXPERIMENTAL
 
-def spin(angle):
+    Make a corner
+    """
+    rel_speed = _limit_rel_speed(rel_speed)
+    pi = math.pi
+    angle_rad = angle / 180.0 * pi
+
+    if angle < 0.0:
+        drive_left = 1.0 * rel_speed
+        drive_right = math.cos(angle_rad) * rel_speed
+    else:
+        drive_left = 1.0 * rel_speed
+        drive_right = -math.cos(angle_rad) * rel_speed
+
+    # Calculate the required time delay
+    meters = 2 * pi * radius * math.sin(angle/720.0 * pi)
+    num_seconds = meters * TIME_FORWARD_1M / rel_speed
+
+    # Perform the motion
+    move(drive_left, drive_right, num_seconds)
+
+
+def spin(angle, rel_speed=1.0):
     """
     Function to spin an angle in degrees
     """
+    rel_speed = _limit_rel_speed(rel_speed)
+
     if angle < 0.0:
         # Left turn
-        drive_left = -1.0
-        drive_right = +1.0
+        drive_left = -rel_speed
+        drive_right = rel_speed
         angle *= -1
     else:
         # Right turn
-        drive_left = +1.0
-        drive_right = -1.0
+        drive_left = rel_speed
+        drive_right = -rel_speed
     # Calculate the required time delay
-    num_seconds = (angle / 360.0) * TIME_SPIN_360
+    num_seconds = (angle / 360.0) * TIME_SPIN_360 / rel_speed
     # Perform the motion
     move(drive_left, drive_right, num_seconds)
 
 
-def drive(meters):
+def drive(meters, rel_speed=1.0):
     """
     Function to drive a distance in meters
     """
+    rel_speed = _limit_rel_speed(rel_speed)
+
     if meters < 0.0:
         # Reverse drive
-        drive_left = -1.0
-        drive_right = -1.0
+        drive_left = -rel_speed
+        drive_right = -rel_speed
         meters *= -1
     else:
         # Forward drive
-        drive_left = +1.0
-        drive_right = +1.0
+        drive_left = rel_speed
+        drive_right = rel_speed
+
     # Calculate the required time delay
-    num_seconds = meters * TIME_FORWARD_1M
+    num_seconds = meters * TIME_FORWARD_1M / rel_speed
+
     # Perform the motion
     move(drive_left, drive_right, num_seconds)
+
+
+def _limit_rel_speed(rel_speed):
+    # Limit the relative speed:
+    #   0 < relative speed <= 1
+    rel_speed = max(min(rel_speed, 1.0), 0.0)
+    if rel_speed == 0:
+        raise ValueError
+    return rel_speed
