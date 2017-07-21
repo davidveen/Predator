@@ -54,7 +54,7 @@ def _chip_present():
 _chip_present()
 # Uncomment to disable EPO latch, needed if you do not have a switch / jumper
 # PBR.SetEpoIgnore(True)
-PBR.SetCommsFailsafe(False)  # Disable the communications failsafe
+PBR.SetCommsFailsafe(True)  # Disable the communications failsafe
 PBR.ResetEpo()
 
 

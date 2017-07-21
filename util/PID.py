@@ -130,7 +130,7 @@ class PID(object):
         """
         self.windup_guard = windup
 
-    def setSampleTime(self, sample_time):
+    def set_sample_time(self, sample_time):
         """
         PID that should be updated at a regular interval.
         Based on a pre-determined sample time,
